@@ -46,27 +46,27 @@ NIR Camera (OV5647 + 850nm LEDs)
          │
          ▼
 ┌─────────────────────────┐
-│  10-Stage Preprocessing  │  Gaussian blur → Smart crop → Wrist removal →
-│  Pipeline (preprocessing │  Finger removal → Otsu mask → CLAHE →
-│  .py)                    │  Sato vesselness → Feathered mask → Crop →
+│  10-Stage Preprocessing │  Gaussian blur → Smart crop → Wrist removal →
+│  Pipeline (preprocessing│  Finger removal → Otsu mask → CLAHE →
+│  .py)                   │  Sato vesselness → Feathered mask → Crop →
 └─────────────────────────┘  Z-score normalise → 224×224×1 image
          │
          ▼
 ┌─────────────────────────┐
-│  CNN Backbone (TFLite)   │  4 conv blocks (32→64→128→256 filters)
-│  128-dim L2 embedding    │  → GlobalAvgPool → Dense 256 → Dense 128
+│  CNN Backbone (TFLite)  │  4 conv blocks (32→64→128→256 filters)
+│  128-dim L2 embedding   │  → GlobalAvgPool → Dense 256 → Dense 128
 └─────────────────────────┘  → L2 normalise
          │
          ▼
 ┌─────────────────────────┐
-│  Euclidean Distance      │  Compare query embedding against
-│  Matching + Threshold    │  stored enrollment templates (SQLite)
+│  Euclidean Distance     │  Compare query embedding against
+│  Matching + Threshold   │  stored enrollment templates (SQLite)
 └─────────────────────────┘
          │
          ▼
 ┌─────────────────────────┐
-│  Liveness Check          │  MLX90614 measures hand surface temp
-│  (MLX90614 sensor)       │  Valid range: 30°C – 37°C
+│  Liveness Check         │  MLX90614 measures hand surface temp
+│  (MLX90614 sensor)      │  Valid range: 30°C – 37°C
 └─────────────────────────┘
          │
          ▼
