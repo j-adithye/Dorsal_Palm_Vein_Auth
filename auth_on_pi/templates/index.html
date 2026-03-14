@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}VeinAuth — Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-badge">BIOMETRIC SYSTEM v3.0</div>
+    <h1 class="hero-title">
+        DORSAL<br>
+        <span class="hero-accent">VEIN</span><br>
+        AUTH
+    </h1>
+    <p class="hero-sub">NIR Palm Vein Recognition · Raspberry Pi 4B · 99.90% Accuracy</p>
+
+    <div class="hero-actions">
+        <a href="/register" class="btn btn-primary">
+            <span class="btn-icon">⊕</span> REGISTER USER
+        </a>
+        <a href="/verify" class="btn btn-secondary">
+            <span class="btn-icon">◈</span> VERIFY (1:1)
+        </a>
+        <a href="/identify" class="btn btn-secondary">
+            <span class="btn-icon">◉</span> IDENTIFY (1:N)
+        </a>
+    </div>
+
+    <div class="hero-stats">
+        <div class="stat">
+            <div class="stat-value">99.90<span class="stat-unit">%</span></div>
+            <div class="stat-label">ACCURACY</div>
+        </div>
+        <div class="stat-divider">|</div>
+        <div class="stat">
+            <div class="stat-value">0.10<span class="stat-unit">%</span></div>
+            <div class="stat-label">EER</div>
+        </div>
+        <div class="stat-divider">|</div>
+        <div class="stat">
+            <div class="stat-value">128<span class="stat-unit">d</span></div>
+            <div class="stat-label">EMBEDDING</div>
+        </div>
+        <div class="stat-divider">|</div>
+        <div class="stat">
+            <div class="stat-value">522<span class="stat-unit"></span></div>
+            <div class="stat-label">IDENTITIES</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

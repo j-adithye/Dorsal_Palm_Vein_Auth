@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VeinAuth{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="noise"></div>
+
+    <nav class="navbar">
+        <a href="/" class="nav-logo">
+            <span class="logo-bracket">[</span>
+            VEIN<span class="logo-accent">AUTH</span>
+            <span class="logo-bracket">]</span>
+        </a>
+        <div class="nav-links">
+            <a href="/register" class="nav-link {% if request.path == '/register' %}active{% endif %}">REGISTER</a>
+            <a href="/verify" class="nav-link {% if request.path == '/verify' %}active{% endif %}">VERIFY</a>
+            <a href="/identify" class="nav-link {% if request.path == '/identify' %}active{% endif %}">IDENTIFY</a>
+            <a href="/admin" class="nav-link {% if request.path == '/admin' %}active{% endif %}">ADMIN</a>
+            <a href="/debug" class="nav-link {% if request.path == '/debug' %}active{% endif %}">DEBUG</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <span class="footer-text">DORSAL PALM VEIN RECOGNITION SYSTEM</span>
+        <span class="footer-dot">◆</span>
+        <span class="footer-text">Pi 4B + NIR 850nm</span>
+    </footer>
+
+    <script src="/static/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

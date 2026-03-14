@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}VeinAuth — Debug{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-tag">⚙ DEBUG</div>
+        <h2 class="page-title">PREPROCESSING VIEW</h2>
+        <p class="page-sub">Live camera feed vs preprocessed vein output</p>
+    </div>
+
+    <div class="debug-grid">
+        <!-- Raw feed — always live -->
+        <div class="debug-stream">
+            <div class="debug-label">RAW FEED</div>
+            <div class="camera-frame">
+                <img src="/stream" class="camera-feed" alt="Raw Feed">
+                <div class="camera-status">LIVE</div>
+            </div>
+        </div>
+
+        <!-- Preprocessed feed — controlled by button -->
+        <div class="debug-stream">
+            <div class="debug-label">PREPROCESSED</div>
+            <div class="camera-frame">
+                <img id="preStream" class="camera-feed" alt="Preprocessed Feed">
+                <div class="camera-status" id="preStatus">STOPPED</div>
+            </div>
+            <div class="debug-controls">
+                <button class="btn btn-primary btn-sm" id="startBtn">
+                    <span class="btn-icon">▶</span> START
+                </button>
+                <button class="btn btn-danger btn-sm hidden" id="stopBtn">
+                    <span class="btn-icon">■</span> STOP
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const preStream = document.getElementById('preStream');
+    const preStatus = document.getElementById('preStatus');
+    const startBtn  = document.getElementById('startBtn');
+    const stopBtn   = document.getElementById('stopBtn');
+
+    startBtn.addEventListener('click', () => {
+        preStream.src = '/stream_preprocessed';
+        preStatus.textContent = 'LIVE';
+        preStatus.style.color = 'var(--accent-green)';
+        startBtn.classList.add('hidden');
+        stopBtn.classList.remove('hidden');
+    });
+
+    stopBtn.addEventListener('click', () => {
+        preStream.src = '';
+        preStatus.textContent = 'STOPPED';
+        preStatus.style.color = 'var(--text-dim)';
+        stopBtn.classList.add('hidden');
+        startBtn.classList.remove('hidden');
+    });
+</script>
+{% endblock %}

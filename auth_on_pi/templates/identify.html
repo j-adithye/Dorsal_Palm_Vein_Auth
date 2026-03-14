@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}VeinAuth — Identify{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-tag">◉ 1:N IDENTIFICATION</div>
+        <h2 class="page-title">IDENTIFY USER</h2>
+        <p class="page-sub">Present palm — system searches all registered identities</p>
+    </div>
+
+    <div class="layout-two-col">
+        <!-- Camera Feed -->
+        <div class="camera-panel">
+            <div class="camera-frame">
+                <img src="/stream" class="camera-feed" alt="Camera Feed">
+                <div class="camera-status">LIVE</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-panel">
+        <div class="security-toggle">
+    <div class="security-info">
+        <span class="security-label">SECURITY MODE</span>
+        <span class="security-mode" id="securityMode">NORMAL</span>
+    </div>
+    <button class="toggle-btn" id="securityToggle" onclick="toggleSecurity()">
+        <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+        </span>
+    </button>
+</div>
+            <div class="identify-hint">
+                <div class="hint-icon">◉</div>
+                <p>No username needed. Place your palm and the system will identify you from all registered users.</p>
+            </div>
+
+            <button class="btn btn-primary btn-large" id="identifyBtn">
+                <span class="btn-icon">◎</span> SCAN &amp; IDENTIFY
+            </button>
+
+            <div class="result-panel hidden" id="resultPanel">
+                <div class="result-icon" id="resultIcon"></div>
+                <div class="result-title" id="resultTitle"></div>
+                <div class="result-msg" id="resultMsg"></div>
+
+                <div class="metrics hidden" id="metrics">
+                    <div class="metric">
+                        <div class="metric-label">IDENTITY</div>
+                        <div class="metric-value" id="metricUser">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">DISTANCE</div>
+                        <div class="metric-value" id="metricDist">—</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">CONFIDENCE</div>
+                        <div class="metric-value" id="metricConf">—</div>
+                    </div>
+                </div>
+
+                <div class="confidence-bar-wrap hidden" id="confBarWrap">
+                    <div class="confidence-bar" id="confBar"></div>
+                </div>
+
+                <button class="btn btn-outline btn-sm" id="tryAgainBtn">SCAN AGAIN</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const identifyBtn = document.getElementById('identifyBtn');
+    const resultPanel = document.getElementById('resultPanel');
+    const tryAgainBtn = document.getElementById('tryAgainBtn');
+
+    identifyBtn.addEventListener('click', async () => {
+        identifyBtn.disabled = true;
+        identifyBtn.classList.add('loading');
+        identifyBtn.innerHTML = '<span class="btn-icon">◎</span> SCANNING...';
+
+        try {
+            const res = await fetch('/api/identify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            });
+            const data = await res.json();
+            showResult(data);
+        } catch(e) {
+            showResult({success: false, message: e.toString()});
+        }
+    });
+
+    tryAgainBtn.addEventListener('click', () => {
+        resultPanel.classList.add('hidden');
+        document.getElementById('resultIcon').textContent = '';
+        document.getElementById('resultIcon').className = 'result-icon';
+        document.getElementById('resultTitle').textContent = '';
+        document.getElementById('resultMsg').textContent = '';
+        document.getElementById('metrics').classList.add('hidden');
+        document.getElementById('confBarWrap').classList.add('hidden');
+        document.getElementById('confBar').style.width = '0%';
+        identifyBtn.disabled = false;
+        identifyBtn.classList.remove('loading');
+        identifyBtn.innerHTML = '<span class="btn-icon">◎</span> SCAN &amp; IDENTIFY';
+    });
+
+    function showResult(data) {
+        resultPanel.classList.remove('hidden');
+
+        document.getElementById('resultIcon').textContent = data.success ? '✓' : '✗';
+        document.getElementById('resultIcon').className = 'result-icon ' + (data.success ? 'success' : 'fail');
+        document.getElementById('resultTitle').textContent = data.success ? 'IDENTITY FOUND' : 'UNKNOWN';
+        document.getElementById('resultMsg').textContent = data.message || '';
+
+        if (data.username) {
+            document.getElementById('metrics').classList.remove('hidden');
+            document.getElementById('metricUser').textContent = data.username;
+            document.getElementById('metricDist').textContent = (data.distance || 0).toFixed(4);
+            document.getElementById('metricConf').textContent = (data.confidence || 0) + '%';
+
+            document.getElementById('confBarWrap').classList.remove('hidden');
+            const bar = document.getElementById('confBar');
+            const conf = data.confidence || 0;
+            bar.style.width = conf + '%';
+            bar.style.background = conf > 60 ? 'var(--accent-green)' : conf > 30 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+        }
+    }
+    let highSecurity = false;
+
+async function toggleSecurity() {
+    highSecurity = !highSecurity;
+    const btn   = document.getElementById('securityToggle');
+    const label = document.getElementById('securityMode');
+    btn.classList.toggle('active', highSecurity);
+    label.textContent = highSecurity ? 'HIGH' : 'NORMAL';
+    label.style.color = highSecurity ? 'var(--accent-red)' : 'var(--accent)';
+    await fetch('/api/security', {
+        method:  'POST',
+        headers: {'Content-Type': 'application/json'},
+        body:    JSON.stringify({high: highSecurity})
+    });
+}
+
+// Load current state on page load
+fetch('/api/security').then(r => r.json()).then(data => {
+    highSecurity = data.high;
+    const btn   = document.getElementById('securityToggle');
+    const label = document.getElementById('securityMode');
+    btn.classList.toggle('active', highSecurity);
+    label.textContent = data.mode;
+    label.style.color = highSecurity ? 'var(--accent-red)' : 'var(--accent)';
+});
+</script>
+{% endblock %}

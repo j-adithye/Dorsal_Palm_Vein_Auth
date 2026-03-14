@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}VeinAuth — Admin{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-tag">⚙ ADMINISTRATION</div>
+        <h2 class="page-title">USER MANAGEMENT</h2>
+        <p class="page-sub">{{ users|length }} registered identit{{ 'y' if users|length == 1 else 'ies' }}</p>
+    </div>
+
+    <div class="admin-layout">
+        <div class="user-table-wrap">
+            {% if users %}
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>USERNAME</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    {% for user in users %}
+                    <tr id="row-{{ loop.index }}">
+                        <td class="td-num">{{ loop.index }}</td>
+                        <td class="td-user">{{ user }}</td>
+                        <td class="td-action">
+                            <button class="btn btn-danger btn-xs"
+                                    onclick="deleteUser('{{ user }}', 'row-{{ loop.index }}')">
+                                DELETE
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">◻</div>
+                <p>No users registered yet.</p>
+                <a href="/register" class="btn btn-primary btn-sm">REGISTER FIRST USER</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="admin-sidebar">
+            <div class="admin-card">
+                <div class="admin-card-title">QUICK ACTIONS</div>
+                <a href="/register" class="btn btn-primary btn-sm admin-btn">⊕ Register New User</a>
+                <a href="/verify" class="btn btn-outline btn-sm admin-btn">◈ Verify User</a>
+                <a href="/identify" class="btn btn-outline btn-sm admin-btn">◉ Identify User</a>
+            </div>
+
+            <div class="admin-card" id="deleteConfirm" style="display:none;">
+                <div class="admin-card-title danger-title">CONFIRM DELETE</div>
+                <p class="confirm-msg">Delete user <strong id="confirmUsername"></strong>?</p>
+                <div class="confirm-actions">
+                    <button class="btn btn-danger btn-sm" id="confirmYes">DELETE</button>
+                    <button class="btn btn-outline btn-sm" id="confirmNo">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let pendingUser = null;
+    let pendingRow  = null;
+
+    function deleteUser(username, rowId) {
+        pendingUser = username;
+        pendingRow  = rowId;
+        document.getElementById('confirmUsername').textContent = username;
+        document.getElementById('deleteConfirm').style.display = 'block';
+    }
+
+    document.getElementById('confirmYes').addEventListener('click', async () => {
+        if (!pendingUser) return;
+        try {
+            const res = await fetch('/api/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: pendingUser})
+            });
+            const data = await res.json();
+            if (data.success) {
+                const row = document.getElementById(pendingRow);
+                if (row) row.remove();
+                document.getElementById('deleteConfirm').style.display = 'none';
+                pendingUser = null;
+                pendingRow  = null;
+            } else {
+                alert('Delete failed: ' + data.message);
+            }
+        } catch(e) {
+            alert('Error: ' + e);
+        }
+    });
+
+    document.getElementById('confirmNo').addEventListener('click', () => {
+        document.getElementById('deleteConfirm').style.display = 'none';
+        pendingUser = null;
+        pendingRow  = null;
+    });
+</script>
+{% endblock %}

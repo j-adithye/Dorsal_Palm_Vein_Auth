@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}VeinAuth — Register{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-tag">⊕ ENROLLMENT</div>
+        <h2 class="page-title">REGISTER USER</h2>
+        <p class="page-sub">{{ n_captures }} captures required — {{ positions | join(', ') }}</p>
+    </div>
+
+    <div class="layout-two-col">
+        <!-- Camera Feed -->
+        <div class="camera-panel">
+            <div class="camera-frame">
+                <img src="/stream" class="camera-feed" id="cameraFeed" alt="Camera Feed">
+                <div class="camera-status" id="cameraStatus">LIVE</div>
+            </div>
+
+            <!-- Position indicators -->
+            <div class="position-guide" id="positionGuide">
+                {% for pos in positions %}
+                <div class="position-item" id="pos{{ loop.index0 }}">
+                    <span class="pos-icon">◻</span> {{ pos }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-panel" id="controlPanel">
+            <div class="input-group">
+                <label class="input-label">USERNAME</label>
+                <input type="text" id="username" class="input-field"
+                       placeholder="Enter username..." autocomplete="off">
+            </div>
+
+            <div class="step-display">
+                <div class="step-label">STEP</div>
+                <div class="step-value" id="stepDisplay">—</div>
+                <div class="step-hint" id="stepHint">Enter username to begin</div>
+            </div>
+
+            <button class="btn btn-primary btn-large" id="captureBtn" disabled>
+                <span class="btn-icon">◎</span>
+                <span id="captureBtnText">CAPTURE LEFT</span>
+            </button>
+        </div>
+
+        <!-- Result Panel (hidden until done) -->
+        <div class="control-panel hidden" id="resultPanel">
+            <div class="result-icon" id="resultIcon"></div>
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-msg" id="resultMsg"></div>
+            <a href="/register" class="btn btn-outline btn-sm">REGISTER ANOTHER</a>
+            <a href="/verify" class="btn btn-primary btn-sm">GO TO VERIFY</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const POSITIONS = {{ positions | tojson }};
+    const N         = POSITIONS.length;
+
+    let step     = 0;
+    let busy     = false;
+
+    const username      = document.getElementById('username');
+    const captureBtn    = document.getElementById('captureBtn');
+    const captureBtnText= document.getElementById('captureBtnText');
+    const stepDisplay   = document.getElementById('stepDisplay');
+    const stepHint      = document.getElementById('stepHint');
+    const controlPanel  = document.getElementById('controlPanel');
+    const resultPanel   = document.getElementById('resultPanel');
+
+    username.addEventListener('input', () => {
+        captureBtn.disabled = username.value.trim() === '';
+        if (username.value.trim()) {
+            stepDisplay.textContent = `1 / ${N}`;
+            stepHint.textContent    = `Position hand ${POSITIONS[0]} and capture`;
+            captureBtnText.textContent = `CAPTURE ${POSITIONS[0]}`;
+        }
+    });
+
+    captureBtn.addEventListener('click', async () => {
+        if (busy || !username.value.trim()) return;
+        busy = true;
+        captureBtn.disabled = true;
+        captureBtn.classList.add('loading');
+        captureBtnText.textContent = 'CAPTURING...';
+
+        try {
+            const res  = await fetch('/api/register/capture', {
+                method:  'POST',
+                headers: {'Content-Type': 'application/json'},
+                body:    JSON.stringify({username: username.value.trim(), step})
+            });
+            const data = await res.json();
+
+            if (data.retry) {
+                // Quality check failed — allow retry same step
+                stepHint.textContent = data.message;
+                captureBtn.disabled  = false;
+                captureBtn.classList.remove('loading');
+                captureBtnText.textContent = `RETRY ${POSITIONS[step]}`;
+                busy = false;
+                return;
+            }
+
+            if (data.next) {
+                // Mark current position done
+                document.getElementById(`pos${step}`).classList.add('done');
+                document.getElementById(`pos${step}`).querySelector('.pos-icon').textContent = '◼';
+
+                step = data.next_step;
+                stepDisplay.textContent    = `${step + 1} / ${N}`;
+                stepHint.textContent       = `Position hand ${data.next_position} and capture`;
+                captureBtnText.textContent = `CAPTURE ${data.next_position}`;
+                captureBtn.disabled        = false;
+                captureBtn.classList.remove('loading');
+                busy = false;
+
+            } else if (data.success) {
+                // Mark last position done
+                document.getElementById(`pos${step}`).classList.add('done');
+                document.getElementById(`pos${step}`).querySelector('.pos-icon').textContent = '◼';
+                showResult(true, 'REGISTERED', data.message);
+            } else {
+                showResult(false, 'FAILED', data.message || 'Registration failed');
+            }
+
+        } catch(e) {
+            showResult(false, 'ERROR', e.toString());
+        }
+    });
+
+    function showResult(success, title, msg) {
+        controlPanel.classList.add('hidden');
+        resultPanel.classList.remove('hidden');
+        document.getElementById('resultIcon').textContent = success ? '✓' : '✗';
+        document.getElementById('resultIcon').className   = 'result-icon ' + (success ? 'success' : 'fail');
+        document.getElementById('resultTitle').textContent = title;
+        document.getElementById('resultMsg').textContent   = msg;
+    }
+</script>
+{% endblock %}
