@@ -494,16 +494,21 @@ All parameters are centralised in `auth_on_pi/config.py`.
 
 If you use this work, please cite:
 
+**IJARCCE format:**
+
+J Adithye, Abhimanyu R, Abhijith S Kurup, Adithiya S, Girija V R, "CNN-Based Dorsal Hand Vein Authentication Using Triplet Loss Metric Learning," *International Journal of Advanced Research in Computer and Communication Engineering (IJARCCE)*, DOI: 10.17148/IJARCCE.2026.15372
+
+**BibTeX:**
 ```bibtex
 @article{adithye2026dorsalvein,
-  title     = {CNN-Based Dorsal Hand Vein Authentication Using Triplet Loss Metric Learning},
-  author    = {J Adithye and Abhimanyu R and Abhijith S Kurup and Adithiya S and Girija V R},
-  journal   = {International Journal of Advanced Research in Computer and Communication Engineering (IJARCCE)},
-  volume    = {15},
-  number    = {3},
-  year      = {2026},
-  doi       = {10.17148/IJARCCE.2026.15372},
-  url       = {https://doi.org/10.17148/IJARCCE.2026.15372}
+  title   = {CNN-Based Dorsal Hand Vein Authentication Using Triplet Loss Metric Learning},
+  author  = {J Adithye and Abhimanyu R and Abhijith S Kurup and Adithiya S and Girija V R},
+  journal = {International Journal of Advanced Research in Computer and Communication Engineering (IJARCCE)},
+  volume  = {15},
+  number  = {3},
+  year    = {2026},
+  doi     = {10.17148/IJARCCE.2026.15372},
+  url     = {https://doi.org/10.17148/IJARCCE.2026.15372}
 }
 ```
 
