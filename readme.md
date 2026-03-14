@@ -87,7 +87,7 @@ NIR Camera (OV5647 + 850nm LEDs)
 | Authentication threshold (high security) | 0.25                            |
 | TFLite INT8 inference time (Pi 4B)       | < 200 ms                        |
 | Preprocessing time (Pi 4B)               | < 1800 ms                       |
-| Full pipeline latency                    | < 1 second per query            |
+| Full pipeline latency                    | < 2 second per query            |
 
 Training used the Adam optimiser with an initial learning rate of 1×10⁻⁴, cosine annealing with 5-epoch warm-up, triplet loss margin of 1.5, and a maximum of 50 epochs (early stopping patience 15). Batch size was 128 (K=32 identities × N=4 images).
 
