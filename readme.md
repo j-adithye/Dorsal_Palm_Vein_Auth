@@ -33,7 +33,6 @@ Hand vein biometrics offer strong security because vascular patterns lie beneath
 - **Near-infrared image capture** using an OV5647 NoIR camera + 850 nm LEDs
 - **Ten-stage preprocessing pipeline** to isolate the stable metacarpal vein region
 - **Four-block CNN backbone** trained with **online semi-hard triplet loss mining** to generate 128-dimensional L2-normalised embeddings
-- **Liveness detection** via an MLX90614 infrared temperature sensor
 - **Edge deployment** on Raspberry Pi 4B with TFLite INT8 inference
 - **Flask web app + CLI** for registration and verification
 
