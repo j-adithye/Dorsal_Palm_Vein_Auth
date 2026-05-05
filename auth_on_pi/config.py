@@ -29,12 +29,11 @@ IMG_SIZE      = 224           # must match training
 EMBEDDING_DIM = 128            # must match training
 
 
-THRESHOLD      = 0.4
-THRESHOLD_HIGH = 0.25
+THRESHOLD_HIGH = 0.18
 
 def set_high_security(enabled):
     global THRESHOLD
-    THRESHOLD = THRESHOLD_HIGH if enabled else 0.3
+    THRESHOLD = THRESHOLD_HIGH if enabled else 0.25
 
 
 # -- Preprocessing -----------------------------------------------------------
