@@ -21,8 +21,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from itertools import combinations
+from augmentation import augment_image
 
 import tensorflow as tf
+tf.config.experimental.set_memory_growth(
+    tf.config.list_physical_devices('GPU')[0], True
+)
 from tensorflow.keras import layers, Model, Input
 from tensorflow.keras.saving import register_keras_serializable
 from tensorflow.keras.optimizers import Adam
@@ -31,8 +35,6 @@ from tensorflow.keras.callbacks import (
 )
 
 sys.path.insert(0, '/kaggle/working')
-from augmentation import augment_image
-
 
 # ── PATHS ──
 OUTPUT_DIR = '/kaggle/working/output'
@@ -44,8 +46,8 @@ os.makedirs(CKPT_DIR,   exist_ok=True)
 # ── CONFIG ──
 CONFIG = {
     'output_dir':    OUTPUT_DIR,
-    'backbone_path': os.path.join(OUTPUT_DIR, 'cnn_backbone.h5'),
-    'best_ckpt':     os.path.join(OUTPUT_DIR, 'backbone_best.h5'),
+    'backbone_path': os.path.join(OUTPUT_DIR, 'cnn_backbone.keras'),
+    'best_ckpt':     os.path.join(OUTPUT_DIR, 'backbone_best.keras'),
     'tflite_path':   os.path.join(OUTPUT_DIR, 'cnn_backbone.tflite'),
     'deploy_config': os.path.join(OUTPUT_DIR, 'deployment_config.json'),
     'plot_path':     os.path.join(OUTPUT_DIR, 'training_curves.png'),
@@ -55,7 +57,7 @@ CONFIG = {
 
     'img_size':      224,
     'channels':      1,
-    'embedding_dim': 128,
+    'embedding_dim': 256,
 
     'train_ratio':   0.75,
     'val_ratio':     0.15,
@@ -63,17 +65,17 @@ CONFIG = {
     # Identity sampler — K identities x N images = batch size
     # 32 x 4 = 128, same batch size as before
     'K':             32,    # identities per batch
-    'N':             4,     # images per identity per batch
+    'N':             8,     # images per identity per batch
 
-    'epochs':        50,
+    'epochs':        100,
     'learning_rate': 1e-4,
     'min_lr':        1e-6,
-    'es_patience':   15,
+    'es_patience':   20,
 
     'margin':        1.5,
 
     'warmup_epochs': 5,
-    'restart_every': 20,
+    'restart_every': 15,
 }
 
 
@@ -147,7 +149,7 @@ class IdentityBatchGenerator(tf.keras.utils.Sequence):
         self.N               = N
         self.augment         = augment
         self.identities      = list(class_map.keys())
-        self.steps_per_epoch = steps_per_epoch or len(self.identities) // K
+        self.steps_per_epoch = steps_per_epoch or len(self.identities) // K * 12
 
     def __len__(self):
         return self.steps_per_epoch
@@ -237,7 +239,7 @@ def build_backbone(img_size, channels, embedding_dim):
     x = layers.Dense(256, name='dense1')(x)
     x = layers.BatchNormalization(name='bn_dense')(x)
     x = layers.ReLU(name='relu_dense')(x)
-    x = layers.Dropout(0.2, name='drop_dense')(x)
+    x = layers.Dropout(0.1, name='drop_dense')(x)
     x = layers.Dense(embedding_dim, name='embedding')(x)
     outputs = L2NormalizeLayer(name='l2_norm')(x)
 
@@ -307,10 +309,10 @@ class BackboneCheckpoint(tf.keras.callbacks.Callback):
         self.ckpt_dir = ckpt_dir
 
     def on_epoch_end(self, epoch, logs=None):
-        path     = os.path.join(self.ckpt_dir, f'backbone_epoch_{epoch+1:02d}.h5')
+        path     = os.path.join(self.ckpt_dir, f'backbone_epoch_{epoch+1:02d}.keras')
         val_loss = logs.get('val_loss', float('nan'))
         self.backbone.save(path)
-        print(f'  Backbone checkpoint saved: backbone_epoch_{epoch+1:02d}.h5'
+        print(f'  Backbone checkpoint saved: backbone_epoch_{epoch+1:02d}.keras'
               f'  (val_loss={val_loss:.4f})')
 
 

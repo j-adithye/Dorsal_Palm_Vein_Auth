@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 augmentation.py
@@ -7,7 +8,6 @@ Augmentation pipeline for palm vein recognition.
 Since lighting is controlled (fixed NIR LEDs), brightness/contrast ranges
 are reduced. New augmentations added for better structural understanding:
   - Random erasing   : forces model not to rely on any single vein segment
-  - Grid distortion  : simulates hand placement variation and skin deformation
   - Sharpen/blur     : simulates focus and pressure variation between captures
 
 All augmentations are probabilistic — not every transform applies every time.
@@ -30,22 +30,18 @@ import cv2
 AUG_CONFIG = {
     # Spatial
     "rotation_deg":       12,     # ± degrees
-    "translate_frac":     0.07,   # ± fraction of image size
+    "translate_frac":     0.05,   # ± fraction of image size
 
     # Photometric — reduced since lighting is controlled
 
     "noise_std":          6,      # gaussian noise std in pixel space (was 8)
 
     # Random erasing
-    "erase_prob":         0.5,    # probability of applying
+    "erase_prob":         0.7,    # probability of applying
     "erase_min_frac":     0.02,   # min erased area as fraction of image
     "erase_max_frac":     0.12,   # max erased area as fraction of image
-    "erase_max_patches":  4,      # max number of patches per image
+    "erase_max_patches":  6,      # max number of patches per image
 
-    # Grid distortion
-    "grid_prob":          0.5,    # probability of applying
-    "grid_steps":         4,      # number of grid cells per axis
-    "grid_distort":       0.2,   # max distortion per grid point (fraction)
 
     # Sharpen / blur
     "sharpen_blur_prob":  0.4,    # probability of applying
@@ -77,43 +73,7 @@ def _translate(img):
                           borderMode=cv2.BORDER_REFLECT_101)
 
 
-def _grid_distortion(img):
-    """
-    Simulates hand placement variation and skin deformation.
-    Divides image into a grid and randomly displaces each grid point.
-    Much lighter than elastic distortion but still captures position variation.
-    """
-    if random.random() > AUG_CONFIG["grid_prob"]:
-        return img
 
-    h, w    = img.shape
-    steps   = AUG_CONFIG["grid_steps"]
-    distort = AUG_CONFIG["grid_distort"]
-
-    # Build displacement map
-    map_x = np.zeros((h, w), dtype=np.float32)
-    map_y = np.zeros((h, w), dtype=np.float32)
-
-    step_x = w // steps
-    step_y = h // steps
-
-    for i in range(steps + 1):
-        for j in range(steps + 1):
-            x = min(j * step_x, w - 1)
-            y = min(i * step_y, h - 1)
-            dx = random.uniform(-distort, distort) * step_x
-            dy = random.uniform(-distort, distort) * step_y
-            x1 = min(x + step_x, w - 1)
-            y1 = min(y + step_y, h - 1)
-            map_x[y:y1, x:x1] = np.linspace(x + dx, x1 + dx, x1 - x) if x1 > x else x + dx
-            map_y[y:y1, x:x1] = np.linspace(y + dy, y1 + dy, y1 - y).reshape(-1, 1) if y1 > y else y + dy
-
-    map_x = np.clip(map_x, 0, w - 1).astype(np.float32)
-    map_y = np.clip(map_y, 0, h - 1).astype(np.float32)
-
-    return cv2.remap(img, map_x, map_y,
-                     interpolation=cv2.INTER_LINEAR,
-                     borderMode=cv2.BORDER_REFLECT_101)
 
 
 # ─────────────────────────────────────────────
@@ -215,7 +175,6 @@ def augment_image(img):
     img = _sharpen_blur(img)
     img = _gaussian_noise(img)
 
-    img = _grid_distortion(img)
     
     # Structural
     img = _random_erase(img)
